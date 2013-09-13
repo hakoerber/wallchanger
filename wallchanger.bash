@@ -17,9 +17,10 @@ pics="$(find $FOLDER -print -name "*.jpg" -o -name "*.jpeg" -o -name "*.png")"
 while true ; do
     pic="$(echo "$pics" | shuf -n1)"
     echo "[I] Changing wallpaper to \"$pic\"."
-    output=$(feh --bg-scale --no-fehbg "$pic") && \
+    output=$(feh --bg-scale --no-fehbg "$pic" 2>&1) && \
         echo "[I] Wallpaper changed." || \
-        { echo "[E] Changing wallpaper failed:\n$output\nSkipping." ; \
+        { echo -e \
+            "[E] Changing wallpaper failed:\n\n${output}\n\n[E]Skipping." ; \
             sleep 1 ; continue ; }
     [[ -z "$TIMEOUT" || "$TIMEOUT" == "0" ]] && { echo "[I] Done." ; break ; }
     echo "[I] Sleeping for $TIMEOUT seconds."
