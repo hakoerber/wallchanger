@@ -40,8 +40,10 @@ elif [[ "$pics_count" -eq "$screencount" ]]; then
 fi
 
 while true ; do
-    pic_array=($(echo "$pics" | shuf -n $screencount))
-    echo "[I] Changing wallpaper to \"${pic_array[@]}\"."
+    for i in $(seq 0 $(( $screencount - 1 ))); do
+        pic_array[$i]="$(echo "$pics" | shuf -n 1)"
+    done
+    output "[I] Changing wallpaper to \"${pic_array[@]}\"."
     output=$(feh --bg-fill --no-fehbg "${pic_array[@]}" 2>&1) && \
         output "[I] Wallpaper changed." || \
         { output \
