@@ -6,6 +6,9 @@
 ###     recursively.
 ### $2: Timeout in seconds between wallpaper changes. If omitted or 0, the
 ###     wallpaper will only be set once.
+### $3: A fallback directory that is used if the directory specified in $1
+###     does not exist. In fallback mode, wallpapers will not be cycled, but
+###     only the first one found will be used.
 
 output() {
     echo -e  "[$(date +%FT%T)] $*"
@@ -13,8 +16,19 @@ output() {
 
 FOLDER="$1"
 TIMEOUT="$2"
+FALLBACK="$3"
 
-[[ -d "$FOLDER" ]] || { output "[E] \"$FOLDER\" is not a directory." ; exit 1 ; }
+FALLBACK_MODE=0
+
+[[ -d "$FOLDER" ]] || {
+    output "[E] \"$FOLDER\" is not a directory. Using fallback directory instead." ;
+    [[ -d "$FALLBACK" ]] || {
+        output "[E] \"$FALLBACK\" is not a directory. Aborting." ;
+        exit 1 ;
+    }
+    FOLDER="$FALLBACK"
+    FALLBACK_MODE=1
+}
 
 [[ $TIMEOUT =~ ^[0-9]+$ ]] || \
     { output "[E] Timeout \"$TIMEOUT\" is invalid." ; exit 1 ; }
@@ -25,7 +39,7 @@ output "[I] $screencount screens detected."
 pics="$(find $FOLDER \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" \))"
 
 pics_count=$(echo "$pics" | wc -l)
-output "[I] $pics_count pictures found."
+output "[I] $pics_count pictures found:\n$pics"
 
 if [[ "$pics_count" -eq 0 ]]; then
     output "[E] No suitable wallpapers found. Aborting"
@@ -49,7 +63,14 @@ while true ; do
         { output \
             "[E] Changing wallpaper failed:\n\n${output}\n\n[E] Skipping." ; \
             sleep 1 ; continue ; }
-    [[ -z "$TIMEOUT" || "$TIMEOUT" == "0" ]] && { output "[I] Done." ; break ; }
+    [[ -z "$TIMEOUT" || "$TIMEOUT" == "0" ]] && {
+        output "[I] Done." ;
+        break ;
+    }
+    [[ "$FALLBACK_MODE" == "1" ]] && {
+        output "[I] No cycling in fallback mode. Done." ;
+        break ;
+    }
     output "[I] Sleeping for $TIMEOUT seconds."
     sleep $TIMEOUT 2>/dev/null
     output "[I] Waking up."
