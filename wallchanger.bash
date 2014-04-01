@@ -36,7 +36,9 @@ FALLBACK_MODE=0
 screencount=$(xrandr | awk '{if ($2 == "connected") {c+=1}} END{print c}')
 output "[I] $screencount screens detected."
 
-pics="$(find $FOLDER \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" \))"
+output "[I] Looking for pictures in \"$FOLDER\""
+# -H resolves symbolic links for command line arguments only.
+pics="$(find -H $FOLDER \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" \))"
 
 pics_count=$(echo "$pics" | wc -l)
 output "[I] $pics_count pictures found:\n$pics"
