@@ -11,8 +11,12 @@
 ###     only the first one found will be used.
 
 LOGFILE="$HOME/.var/log/wallchanger.log"
+FOLDER="$1"
+TIMEOUT="$2"
+FALLBACK="$3"
 
 set -e
+set -u
 
 log() {
     if [[ "$LOGFILE" ]]; then
@@ -37,11 +41,7 @@ usage: $(basename $0) PATH_TO_WALLPAPER_DIRECTORY INTERVAL_IN_SECONDS [FALLBACK_
 EOF
 }
 
-FOLDER="$1"
-TIMEOUT="$2"
-FALLBACK="$3"
-
-FALLBACK_MODE=0
+fallback_mode=0
 
 if [[ -z "$FOLDER" ]]; then
     usage
@@ -56,7 +56,7 @@ elif [[ ! -d "$FOLDER" ]]; then
         exit 1
     fi
     FOLDER="$FALLBACK"
-    FALLBACK_MODE=1
+    fallback_mode=1
 fi
 
 if [[ -z "$TIMEOUT" ]]; then
@@ -130,7 +130,7 @@ while : ; do
         output "[I] No timeout given. Done."
         break
     fi
-    if [[ "$FALLBACK_MODE" == "1" ]]; then
+    if [[ "$fallback_mode" == "1" ]]; then
         output "[I] No cycling in fallback mode. Done."
         break
     fi
