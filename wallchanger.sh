@@ -90,25 +90,42 @@ elif [[ "$pics_count" -eq "$screencount" ]]; then
     TIMEOUT=0
 fi
 
-next_wallpaper() {
-    for i in $(seq 0 $(( $screencount - 1 ))); do
-        pic_array[$i]="$(echo "$pics" | shuf -n 1)"
-    done
+set_wallpaper() {
+    pic_array="$@"
     output "[I] Changing wallpaper to \"${pic_array[@]}\"."
     if fehoutput=$(feh --bg-fill --no-fehbg "${pic_array[@]}" 2>&1); then
         output "[I] Wallpaper changed."
     else
-        error "Changing wallpaper failed:\n\n${fehoutput}\n\n[E] Skipping." 
+        error "Setting wallpaper failed:\n\n${fehoutput}\n\n[E] Skipping." 
         sleep 1 
         return 1
     fi
 }
 
+next_wallpaper() {
+    for i in $(seq 0 $(( $screencount - 1 ))); do
+        pic_array[$i]="$(echo "$pics" | shuf -n 1)"
+    done
+    set_wallpaper $pic_array
+}
+
+reload_wallpaper() {
+    output "[I] Reloading wallpapers."
+    set_wallpaper $pic_array
+}
+
+reload=0
 trap ":" SIGUSR1
+trap "reload=1" SIGUSR2
 trap "error \"Unknown error. Terminating.\"" ERR
 
 while : ; do
-    next_wallpaper || continue
+    if [[ $reload == 0 ]]; then
+        next_wallpaper || continue
+    else
+        reload_wallpaper
+        reload=0
+    fi
     if [[ -z "$TIMEOUT" || "$TIMEOUT" == "0" ]]; then
         output "[I] No timeout given. Done."
         break
