@@ -15,7 +15,6 @@ FOLDER="$1"
 TIMEOUT="$2"
 FALLBACK="$3"
 
-set -e
 set -u
 
 log() {
