@@ -13,7 +13,7 @@
 # Signals:
 #
 # SIGUSR1: Next wallpaper
-# SIGUSR2: Set current wallpaper again
+# SIGUSR2: Set current wallpaper again after reloading screen information
 
 declare -r LOGFILE="$HOME/.var/log/wallchanger.log"
 declare -r FOLDER="$1"
@@ -67,24 +67,35 @@ set_wallpaper() {
     fi
 }
 
-next_wallpaper() {
+randomize_wallpaper() {
     pic_array=()
+    output "[I] Randomizing wallpapers."
     for (( i=0; i<$screencount; i++ )) ; do
         pic_array[$i]="${picture_list[$RANDOM % ${#picture_list[@]}]}"
     done
+}
+
+next_wallpaper() {
+    randomize_wallpaper
     set_wallpaper
 }
 
 reload_wallpaper() {
     output "[I] Reloading wallpapers."
-    detect_screens
-    next_wallpaper
+    oldscreens=$screencount
+    screencount=$(detect_screens)
+    echo $oldscreens
+    echo $screencount
+    if (( $oldscreens != $screencount )) ; then
+        randomize_wallpaper
+    fi
+    set_wallpaper
 }
 
 fallback_mode=0
 
 if [[ -z "$FOLDER" ]]; then
-    usage
+    print_usage
     exit 1
 elif [[ ! -d "$FOLDER" ]]; then
     error "\"$FOLDER\" is not a directory. Using fallback directory instead."
