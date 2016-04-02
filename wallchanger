@@ -6,9 +6,6 @@
 ###     recursively.
 ### $2: Timeout in seconds between wallpaper changes. If omitted or 0, the
 ###     wallpaper will only be set once.
-### $3: A fallback directory that is used if the directory specified in $1
-###     does not exist. In fallback mode, wallpapers will not be cycled, but
-###     only the first one found will be used.
 
 # Signals:
 #
@@ -18,7 +15,6 @@
 declare -r LOGFILE="$HOME/.var/log/wallchanger.log"
 declare -r FOLDER="$1"
 declare -r TIMEOUT="$2"
-declare -r FALLBACK="$3"
 
 log() {
     if [[ "$LOGFILE" ]]; then
@@ -39,7 +35,7 @@ error() {
 
 print_usage() {
     cat << EOF
-usage: $(basename $0) PATH_TO_WALLPAPER_DIRECTORY INTERVAL_IN_SECONDS [FALLBACK_DIRECTORY]
+usage: $(basename $0) PATH_TO_WALLPAPER_DIRECTORY INTERVAL_IN_SECONDS
 EOF
 }
 
@@ -59,7 +55,7 @@ get_picture_list() {
 
 set_wallpaper() {
     output "[I] Setting wallpaper \"${pic_array[@]}\"."
-    if fehoutput=$(feh --bg-fill --no-fehbg "${pic_array[@]}" 2>&1); then
+    if fehoutput=$(feh --bg-max --no-fehbg "${pic_array[@]}" 2>&1); then
         output "[I] Wallpaper set."
     else
         error "Setting wallpaper failed:\n\n${fehoutput}\n\n[E] Skipping."
@@ -92,22 +88,11 @@ reload_wallpaper() {
     set_wallpaper
 }
 
-fallback_mode=0
-
 if [[ -z "$FOLDER" ]]; then
     print_usage
     exit 1
 elif [[ ! -d "$FOLDER" ]]; then
-    error "\"$FOLDER\" is not a directory. Using fallback directory instead."
-    if [[ -z "$FALLBACK" ]]; then
-        error "Fallback directory not specified. Aborting."
-        exit 1
-    elif [[ ! -d "$FALLBACK" ]]; then
-        error "\"$FALLBACK\" is not a directory. Aborting."
-        exit 1
-    fi
-    FOLDER="$FALLBACK"
-    fallback_mode=1
+    error "\"$FOLDER\" is not a directory. Aborting."
 fi
 
 if [[ -z "$TIMEOUT" ]]; then
@@ -153,10 +138,6 @@ while : ; do
     fi
     if [[ -z "$TIMEOUT" || "$TIMEOUT" == "0" ]]; then
         output "[I] No timeout given. Done."
-        break
-    fi
-    if [[ "$fallback_mode" == "1" ]]; then
-        output "[I] No cycling in fallback mode. Done."
         break
     fi
     output "[I] Sleeping for $TIMEOUT seconds."
