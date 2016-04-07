@@ -144,5 +144,6 @@ while : ; do
     sleep $TIMEOUT 2>/dev/null &
     wait
     output "[I] Waking up."
+    get_picture_list "$FOLDER"
 done
 
